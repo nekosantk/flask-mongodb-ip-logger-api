@@ -1,0 +1,25 @@
+server {
+    listen 80;
+    return 301 https://localhost;
+}
+
+server {
+    listen 443 ssl;
+
+    ssl_certificate /ssl/localhost.crt;
+    ssl_certificate_key /ssl/localhost.pem;
+    ssl_protocols TLSv1.2;
+
+    location / {
+        proxy_pass http://${ANGULAR_ADDR};
+    }
+}
+
+server {
+    listen 8000;
+
+    location / {
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_pass http://${FLASK_SERVER_ADDR};
+    }
+}

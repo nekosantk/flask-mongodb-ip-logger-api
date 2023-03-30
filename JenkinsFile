@@ -1,0 +1,63 @@
+pipeline {
+    agent { docker { image 'python:3.11-slim' } }
+     stages {
+        stage('Build') {
+            steps {
+                echo 'Build stage started'
+                def build_success = sh(
+                    script: '/usr/local/bin/docker-compose up --build',
+                    returnStatus: true
+                ) == 0
+                if (!build_success): {
+                    error("Build failed stage failed")
+                }
+                echo 'Build stage complete'
+            }
+        }
+        stage('Run') {
+            steps {
+                echo 'Run stage started'
+                def run_success = sh(
+                    script: '/usr/local/bin/docker-compose up',
+                    returnStatus: true
+                ) == 0
+                if (!run_success) {
+                    error("Run stage failed")
+                }
+                echo 'Run stage started'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Test stage started'
+                sh 'sudo apt install dig'
+                def host_ip = sh(
+                    script: "docker network inspect --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' flask-mongodb-ip-address-api_default",
+                    returnStdout: true
+                )
+                def first_response = sh(
+                    script: 'curl --insecure https://localhost/api/myip',
+                    returnStdout: true
+                )
+                if (first_response != "Your client’s IP address is: " + host_ip + ". This is the first message received from your client.") {
+                    error("Test stage failed")
+                }
+                def second_response = sh(
+                    script: 'curl --insecure https://localhost/api/myip',
+                    returnStdout: true
+                )
+                if (second_response.contains("Your client’s IP address is: " + host_ip + ". previous/last request was on ") {
+                    error("Test stage failed")
+                }
+                echo 'Test stage End'
+            }
+        }
+        stage('Cleanup') {
+            steps {
+                echo 'Cleanup stage started'
+                sh '/usr/local/bin/docker-compose down'
+                echo 'Cleanup stage started'
+            }
+        }
+    }
+}
