@@ -11,7 +11,7 @@ Docker 4.17.0+ (untested on lower versions)
 ```
 $ git clone git@github.com:nekosantk/flask-mongodb-ip-address-api.git
 $ cd flask-mongodb-ip-address-api
-$ sudo unzip unzip env.zip .env
+$ sudo unzip env.zip .env
 $ sudo unzip ssl_certs.zip -d nginx/ssl
 $ docker compose up
 
